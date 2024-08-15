@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>{{ document.title }}</h1>
+<p>Category: {{ document.category }}</p>
+<p>Uploaded by: {{ document.user.username }}</p>
+<p>Uploaded at: {{ document.created_at|date:"F d, Y" }}</p>
+<p>Description: {{ document.description }}</p>
+<a href="{{ document.file.url }}" target="_blank">Download Document</a>
+
+{% if user == document.user %}
+    <a href="{% url 'delete_document' document.pk %}">Delete</a>
+{% endif %}
+{% endblock %}

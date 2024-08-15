@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Educational Links</h1>
+<a href="{% url 'add_link' %}">Add New Link</a>
+
+{% for link in page_obj %}
+    <div class="link-preview">
+        <h2><a href="{{ link.url }}" target="_blank">{{ link.title }}</a></h2>
+        <p>Category: {{ link.category }}</p>
+        <p>Added by: {{ link.user.username }}</p>
+        <p>Added at: {{ link.created_at|date:"F d, Y" }}</p>
+        <p>Description: {{ link.description }}</p>
+        {% if user == link.user %}
+            <a href="{% url 'delete_link' link.pk %}">Delete</a>
+        {% endif %}
+    </div>
+{% empty %}
+    <p>No educational links added yet.</p>
+{% endfor %}
+
+{% include 'pagination.html' with page=page_obj %}
+{% endblock %}
