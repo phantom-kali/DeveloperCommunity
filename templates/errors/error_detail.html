@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>{{ error.title }}</h1>
+<p>Reported by: {{ error.user.username }}</p>
+<p>Reported at: {{ error.created_at|date:"F d, Y" }}</p>
+
+<h2>Error Message:</h2>
+<pre>{{ error.error_message }}</pre>
+
+<h2>Steps to Reproduce:</h2>
+<p>{{ error.steps_to_reproduce }}</p>
+
+<h2>Expected Behavior:</h2>
+<p>{{ error.expected_behavior }}</p>
+
+<h2>Actual Behavior:</h2>
+<p>{{ error.actual_behavior }}</p>
+
+{% if user == error.user %}
+    <a href="{% url 'edit_error' error.pk %}">Edit</a>
+    <a href="{% url 'delete_error' error.pk %}">Delete</a>
+{% endif %}
+
+<h2>Solutions</h2>
+{% for solution in solutions %}
+    <div class="solution {% if solution.is_accepted %}accepted{% endif %}">
+        <p>{{ solution.content }}</p>
+        <p>By: {{ solution.user.username }} on {{ solution.created_at|date:"F d, Y" }}</p>
+        {% if user == error.user and not solution.is_accepted %}
+            <form method="post" action="{% url 'accept_solution' error.pk solution.pk %}">
+                {% csrf_token %}
+                <button type="submit">Accept Solution</button>
+            </form>
+        {% endif %}
+    </div>
+{% empty %}
+    <p>No solutions proposed yet.</p>
+{% endfor %}
+
+{% if user.is_authenticated %}
+    <h3>Propose a solution</h3>
+    <form method="post">
+        {% csrf_token %}
+        {{ solution_form.as_p }}
+        <button type="submit">Submit Solution</button>
+    </form>
+{% else %}
+    <p>Please <a href="{% url 'login' %}">log in</a> to propose a solution.</p>
+{% endif %}
+{% endblock %}

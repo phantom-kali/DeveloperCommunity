@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Error Messages</h1>
+<a href="{% url 'create_error' %}">Report New Error</a>
+
+{% for error in page_obj %}
+    <div class="error-preview">
+        <h2><a href="{% url 'error_detail' error.pk %}">{{ error.title }}</a></h2>
+        <p>Reported by: {{ error.user.username }}</p>
+        <p>Reported at: {{ error.created_at|date:"F d, Y" }}</p>
+    </div>
+{% empty %}
+    <p>No error messages reported yet.</p>
+{% endfor %}
+
+{% include 'pagination.html' with page=page_obj %}
+{% endblock %}
