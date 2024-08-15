@@ -1,6 +1,47 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Welcome to Community Platform</h1>
-<p>Share code snippets, discuss errors, and learn together!</p>
+<div class="container mt-4">
+    <h1 class="mb-4">Welcome to Community Platform</h1>
+    <p class="mb-4">Share code snippets, discuss errors, and learn together!</p>
+
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Code Snippets</h5>
+                    <p class="card-text">Browse and share useful code snippets with the community.</p>
+                    <a href="{% url 'snippet_list' %}" class="btn btn-primary">View Snippets</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Error Messages</h5>
+                    <p class="card-text">Discuss and resolve common error messages and issues.</p>
+                    <a href="{% url 'error_list' %}" class="btn btn-primary">View Errors</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Educational Documents</h5>
+                    <p class="card-text">Access and share educational PDFs and resources.</p>
+                    <a href="{% url 'document_list' %}" class="btn btn-primary">View Documents</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Educational Links</h5>
+                    <p class="card-text">Discover and share useful links for learning and development.</p>
+                    <a href="{% url 'link_list' %}" class="btn btn-primary">View Links</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
