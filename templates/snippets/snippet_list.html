@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Code Snippets</h1>
+<a href="{% url 'create_snippet' %}">Create New Snippet</a>
+
+{% for snippet in page_obj %}
+    <div class="snippet-preview">
+        <h2><a href="{% url 'snippet_detail' snippet.pk %}">{{ snippet.title }}</a></h2>
+        <p>Language: {{ snippet.language }}</p>
+        <p>Created by: {{ snippet.user.username }}</p>
+        <p>Created at: {{ snippet.created_at|date:"F d, Y" }}</p>
+    </div>
+{% empty %}
+    <p>No snippets available.</p>
+{% endfor %}
+
+{% include 'pagination.html' with page=page_obj %}
+{% endblock %}

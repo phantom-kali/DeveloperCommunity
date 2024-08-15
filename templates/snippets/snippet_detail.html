@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>{{ snippet.title }}</h1>
+<p>Language: {{ snippet.language }}</p>
+<p>Created by: {{ snippet.user.username }}</p>
+<p>Created at: {{ snippet.created_at|date:"F d, Y" }}</p>
+<pre><code>{{ snippet.code }}</code></pre>
+<p>{{ snippet.description }}</p>
+
+{% if user == snippet.user %}
+    <a href="{% url 'edit_snippet' snippet.pk %}">Edit</a>
+    <a href="{% url 'delete_snippet' snippet.pk %}">Delete</a>
+{% endif %}
+
+<h2>Comments</h2>
+{% for comment in comments %}
+    <div class="comment">
+        <p>{{ comment.content }}</p>
+        <p>By: {{ comment.user.username }} on {{ comment.created_at|date:"F d, Y" }}</p>
+    </div>
+{% empty %}
+    <p>No comments yet.</p>
+{% endfor %}
+
+{% if user.is_authenticated %}
+    <h3>Add a comment</h3>
+    <form method="post">
+        {% csrf_token %}
+        {{ comment_form.as_p }}
+        <button type="submit">Add Comment</button>
+    </form>
+{% else %}
+    <p>Please <a href="{% url 'login' %}">log in</a> to add a comment.</p>
+{% endif %}
+{% endblock %}
