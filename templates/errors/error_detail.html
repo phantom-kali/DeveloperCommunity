@@ -6,7 +6,10 @@
 <p>Reported at: {{ error.created_at|date:"F d, Y" }}</p>
 
 <h2>Error Message:</h2>
-<pre>{{ error.error_message }}</pre>
+<div class="code-container">
+    <button class="copy-btn" data-clipboard-target="#error-message">Copy</button>
+    <pre><code id="error-message" class="language-plaintext">{{ error.error_message }}</code></pre>
+</div>
 
 <h2>Steps to Reproduce:</h2>
 <p>{{ error.steps_to_reproduce }}</p>
