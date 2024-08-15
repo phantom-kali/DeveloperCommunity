@@ -9,7 +9,6 @@ urlpatterns = [
     path('snippets/', include('snippets.urls')),
     path('errors/', include('errors.urls')),
     path('documents/', include('documents.urls')),
-    path('payments/', include('payments.urls')),
 ]
 
 if settings.DEBUG:
