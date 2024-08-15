@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Educational Documents</h1>
+<a href="{% url 'upload_document' %}">Upload New Document</a>
+
+{% for document in page_obj %}
+    <div class="document-preview">
+        <h2><a href="{% url 'document_detail' document.pk %}">{{ document.title }}</a></h2>
+        <p>Category: {{ document.category }}</p>
+        <p>Uploaded by: {{ document.user.username }}</p>
+        <p>Uploaded at: {{ document.created_at|date:"F d, Y" }}</p>
+    </div>
+{% empty %}
+    <p>No documents uploaded yet.</p>
+{% endfor %}
+
+{% include 'pagination.html' with page=page_obj %}
+{% endblock %}
