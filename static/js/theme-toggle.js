@@ -2,15 +2,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleButton = document.getElementById('theme-toggle');
     const body = document.body;
 
-    // Load the saved theme from localStorage
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme) {
         body.classList.add(savedTheme);
     } else {
-        body.classList.add('light-mode'); // Default theme
+        body.classList.add('dark-mode');
     }
 
-    // Toggle theme on button click
     toggleButton.addEventListener('click', () => {
         if (body.classList.contains('light-mode')) {
             body.classList.remove('light-mode');

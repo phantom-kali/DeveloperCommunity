@@ -1,3 +1,4 @@
 django
 django-cors-headers
 fuzzywuzzy
+python-Levenshtein
