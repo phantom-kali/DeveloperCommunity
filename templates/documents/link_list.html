@@ -1,23 +1,67 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Educational Links</h1>
-<a href="{% url 'add_link' %}">Add New Link</a>
-
-{% for link in page_obj %}
-    <div class="link-preview">
-        <h2><a href="{{ link.url }}" target="_blank">{{ link.title }}</a></h2>
-        <p>Category: {{ link.category }}</p>
-        <p>Added by: {{ link.user.username }}</p>
-        <p>Added at: {{ link.created_at|date:"F d, Y" }}</p>
-        <p>Description: {{ link.description }}</p>
-        {% if user == link.user %}
-            <a href="{% url 'delete_link' link.pk %}">Delete</a>
-        {% endif %}
+<div class="container mt-4">
+    <h1 class="mb-4">Educational Links</h1>
+    
+    <div class="row mb-4">
+        <div class="col">
+            <a href="{% url 'add_link' %}" class="btn btn-primary">Add New Link</a>
+        </div>
     </div>
-{% empty %}
-    <p>No educational links added yet.</p>
-{% endfor %}
 
-{% include 'pagination.html' with page=page_obj %}
+    <form method="get" action="{% url 'link_list' %}" class="mb-4">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label for="category" class="form-label">Filter by Category:</label>
+                <select name="category" id="category" class="form-select">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat }}" {% if cat == current_category %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="user" class="form-label">Filter by User:</label>
+                <input type="text" name="user" id="user" value="{{ current_user }}" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <label for="q" class="form-label">Search:</label>
+                <input type="text" name="q" id="q" value="{{ query }}" class="form-control">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-secondary w-100">Apply Filters</button>
+            </div>
+        </div>
+    </form>
+
+    {% for link in page_obj %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h2 class="card-title h5">
+                    <a href="{{ link.url }}" target="_blank" class="text-decoration-none">{{ link.title }}</a>
+                </h2>
+                <p class="card-text">
+                    <small class="text-muted">
+                        Category: {{ link.category }} | 
+                        Added by: {{ link.user.username }} | 
+                        Added at: {{ link.created_at|date:"F d, Y" }}
+                    </small>
+                </p>
+                <p class="card-text">{{ link.description }}</p>
+                {% if user == link.user %}
+                    <a href="{% url 'delete_link' link.pk %}" class="btn btn-danger btn-sm">Delete</a>
+                {% endif %}
+            </div>
+        </div>
+    {% empty %}
+        <div class="alert alert-info" role="alert">
+            No educational links added yet.
+        </div>
+    {% endfor %}
+
+    <nav aria-label="Page navigation">
+        {% include 'pagination.html' with page=page_obj %}
+    </nav>
+</div>
 {% endblock %}

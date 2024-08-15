@@ -1,16 +1,42 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.core.paginator import Paginator
 from .models import Document, EducationalLink
 from .forms import DocumentForm, EducationalLinkForm
 
 def document_list(request):
     documents = Document.objects.all().order_by('-created_at')
+    
+    category = request.GET.get('category')
+    if category:
+        documents = documents.filter(category__icontains=category)
+    
+    user = request.GET.get('user')
+    if user:
+        documents = documents.filter(user__username__icontains=user)
+    
+    query = request.GET.get('q')
+    if query:
+        documents = documents.filter(
+            Q(title__icontains=query) |
+            Q(description__icontains=query)
+        )
+    
     paginator = Paginator(documents, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    return render(request, 'documents/document_list.html', {'page_obj': page_obj})
-
+    
+    categories = Document.objects.values_list('category', flat=True).distinct()
+    
+    context = {
+        'page_obj': page_obj,
+        'categories': categories,
+        'current_category': category,
+        'current_user': user,
+        'query': query,
+    }
+    return render(request, 'documents/document_list.html', context)
 @login_required
 def upload_document(request):
     if request.method == 'POST':
@@ -38,11 +64,37 @@ def delete_document(request, pk):
 
 def link_list(request):
     links = EducationalLink.objects.all().order_by('-created_at')
+    
+    category = request.GET.get('category')
+    if category:
+        links = links.filter(category__icontains=category)
+    
+    user = request.GET.get('user')
+    if user:
+        links = links.filter(user__username__icontains=user)
+    
+    query = request.GET.get('q')
+    if query:
+        links = links.filter(
+            Q(title__icontains=query) |
+            Q(description__icontains=query) |
+            Q(url__icontains=query)
+        )
+    
     paginator = Paginator(links, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    return render(request, 'documents/link_list.html', {'page_obj': page_obj})
-
+    
+    categories = EducationalLink.objects.values_list('category', flat=True).distinct()
+    
+    context = {
+        'page_obj': page_obj,
+        'categories': categories,
+        'current_category': category,
+        'current_user': user,
+        'query': query,
+    }
+    return render(request, 'documents/link_list.html', context)
 @login_required
 def add_link(request):
     if request.method == 'POST':
