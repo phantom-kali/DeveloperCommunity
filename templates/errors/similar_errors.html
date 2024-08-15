@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Similar Errors Found</h1>
+<p>We found some errors that are similar to the one you're reporting. Please check if any of these solve your problem:</p>
+
+<ul>
+{% for error, similarity in similar_errors %}
+    <li>
+        <a href="{% url 'error_detail' pk=error.pk %}">{{ error.title }}</a> 
+        ({{ similarity }}% similar)
+    </li>
+{% endfor %}
+</ul>
+
+<h2>If none of these solve your problem, you can still submit your error:</h2>
+<form method="post" action="{% url 'create_error' %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="hidden" name="force_submit" value="1">
+    <button type="submit">Submit for Moderation</button>
+</form>
+{% endblock %}

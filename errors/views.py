@@ -1,8 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.core.paginator import Paginator
 from .models import ErrorMessage, Solution
 from .forms import ErrorMessageForm, SolutionForm
+from fuzzywuzzy import fuzz
+
+def calculate_similarity(text1, text2):
+    return fuzz.ratio(text1.lower(), text2.lower())
 
 def error_list(request):
     errors = ErrorMessage.objects.all().order_by('-created_at')
@@ -16,10 +21,32 @@ def create_error(request):
     if request.method == 'POST':
         form = ErrorMessageForm(request.POST)
         if form.is_valid():
-            error = form.save(commit=False)
-            error.user = request.user
-            error.save()
-            return redirect('error_detail', pk=error.pk)
+            new_error = form.save(commit=False)
+            new_error.user = request.user
+
+            existing_errors = ErrorMessage.objects.filter(
+                Q(title__icontains=new_error.title) |
+                Q(error_message__icontains=new_error.error_message)
+            )
+
+            similar_errors = []
+            for error in existing_errors:
+                similarity = calculate_similarity(new_error.error_message, error.error_message)
+                if similarity > 70:  # 70%
+                    similar_errors.append((error, similarity))
+
+            if similar_errors:
+                return render(request, 'errors/similar_errors.html', {
+                    'form': form,
+                    'similar_errors': similar_errors
+                })
+            
+            # If no similar errors or user chooses to proceed
+            if 'force_submit' in request.POST:
+                new_error.is_pending_moderation = True
+            
+            new_error.save()
+            return redirect('error_detail', pk=new_error.pk)
     else:
         form = ErrorMessageForm()
     return render(request, 'errors/create_error.html', {'form': form})
