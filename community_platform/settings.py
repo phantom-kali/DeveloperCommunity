@@ -18,7 +18,6 @@ INSTALLED_APPS = [
     'snippets',
     'errors',
     'documents',
-    'payments',
 ]
 
 MIDDLEWARE = [
