@@ -3,13 +3,41 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from .models import CodeSnippet, Comment
 from .forms import CodeSnippetForm, CommentForm
+from django.db.models import Q
 
 def snippet_list(request):
     snippets = CodeSnippet.objects.all().order_by('-created_at')
-    paginator = Paginator(snippets, 10)  # 10 snippets per page
+    
+    language = request.GET.get('language')
+    if language:
+        snippets = snippets.filter(language__icontains=language)
+    
+    user = request.GET.get('user')
+    if user:
+        snippets = snippets.filter(user__username__icontains=user)
+    
+    query = request.GET.get('q')
+    if query:
+        snippets = snippets.filter(
+            Q(title__icontains=query) |
+            Q(description__icontains=query) |
+            Q(code__icontains=query)
+        )
+    
+    paginator = Paginator(snippets, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    return render(request, 'snippets/snippet_list.html', {'page_obj': page_obj})
+    
+    languages = CodeSnippet.objects.values_list('language', flat=True).distinct()
+    
+    context = {
+        'page_obj': page_obj,
+        'languages': languages,
+        'current_language': language,
+        'current_user': user,
+        'query': query,
+    }
+    return render(request, 'snippets/snippet_list.html', context)
 
 @login_required
 def create_snippet(request):
