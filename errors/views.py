@@ -11,10 +11,31 @@ def calculate_similarity(text1, text2):
 
 def error_list(request):
     errors = ErrorMessage.objects.all().order_by('-created_at')
-    paginator = Paginator(errors, 10)  # Show 10 errors per page
+    
+    user = request.GET.get('user')
+    query = request.GET.get('q')
+    
+    if user:
+        errors = errors.filter(user__username__icontains=user)
+    if query:
+        errors = errors.filter(
+            Q(title__icontains=query) | 
+            Q(error_message__icontains=query) |
+            Q(steps_to_reproduce__icontains=query) |
+            Q(expected_behavior__icontains=query) |
+            Q(actual_behavior__icontains=query)
+        )
+    
+    paginator = Paginator(errors, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    return render(request, 'errors/error_list.html', {'page_obj': page_obj})
+    
+    context = {
+        'page_obj': page_obj,
+        'current_user': user,
+        'query': query,
+    }
+    return render(request, 'errors/error_list.html', context)
 
 @login_required
 def create_error(request):

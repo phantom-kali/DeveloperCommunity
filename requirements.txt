@@ -2,3 +2,4 @@ django
 django-cors-headers
 fuzzywuzzy
 python-Levenshtein
+django-widget-tweaks
