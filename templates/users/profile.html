@@ -6,22 +6,12 @@
     
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        <div class="mb-3">
-            <label for="{{ form.username.id_for_label }}" class="form-label">Username</label>
-            <input type="text" name="{{ form.username.name }}" id="{{ form.username.id_for_label }}" class="form-control" value="{{ form.username.value }}">
-        </div>
-        <div class="mb-3">
-            <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
-            <input type="email" name="{{ form.email.name }}" id="{{ form.email.id_for_label }}" class="form-control" value="{{ form.email.value }}">
-        </div>
-        <div class="mb-3">
-            <label for="{{ form.bio.id_for_label }}" class="form-label">Bio</label>
-            <textarea name="{{ form.bio.name }}" id="{{ form.bio.id_for_label }}" class="form-control">{{ form.bio.value }}</textarea>
-        </div>
-        <div class="mb-3">
-            <label for="{{ form.profile_picture.id_for_label }}" class="form-label">Profile Picture</label>
-            <input type="file" name="{{ form.profile_picture.name }}" id="{{ form.profile_picture.id_for_label }}" class="form-control">
-        </div>
+        {% for field in form %}
+            <div class="mb-3">
+                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                {{ field }}
+            </div>
+        {% endfor %}
         <button type="submit" class="btn btn-primary">Update Profile</button>
     </form>
 </div>
