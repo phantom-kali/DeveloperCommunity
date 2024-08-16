@@ -9,4 +9,5 @@ urlpatterns = [
     path('links/', views.link_list, name='link_list'),
     path('links/add/', views.add_link, name='add_link'),
     path('links/<int:pk>/delete/', views.delete_link, name='delete_link'),
+    path('report/<int:pk>/', views.report_link, name='report_link'),
 ]

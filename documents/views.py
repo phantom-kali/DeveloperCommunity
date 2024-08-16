@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 import requests
 from urllib.parse import urlparse
 from django.core.cache import cache
 from django.db.models import Q
 from django.core.paginator import Paginator
-from .models import Document, EducationalLink
+from .models import Document, EducationalLink, LinkReport
 from .forms import DocumentForm, EducationalLinkForm
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
@@ -147,9 +148,10 @@ def is_url_safe(url):
     # If not in cache, use Google Safe Browsing API
     api_key = os.getenv("API_KEY")
     api_url = f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={api_key}"
+    my_domain = os.getenv("MY_DOMAIN")
 
     payload = {
-        "client": {"clientId": "jooustconnect.co.ke", "clientVersion": "1.0.0"},
+        "client": {"clientId": my_domain, "clientVersion": "1.0.0"},
         "threatInfo": {
             "threatTypes": ["MALWARE", "SOCIAL_ENGINEERING"],
             "platformTypes": ["ANY_PLATFORM"],
@@ -205,3 +207,22 @@ def delete_link(request, pk):
         link.delete()
         return redirect("link_list")
     return render(request, "documents/delete_link.html", {"link": link})
+
+
+@login_required
+def report_link(request, pk):
+    if request.method == 'POST':
+        link = get_object_or_404(EducationalLink, pk=pk)
+        reason = request.POST.get('reason')
+        
+        if reason:
+            LinkReport.objects.create(
+                link=link,
+                reported_by=request.user,
+                reason=reason
+            )
+            messages.success(request, "Link reported successfully. An administrator will review it.")
+        else:
+            messages.error(request, "Please provide a reason for reporting.")
+    
+    return redirect('link_list')

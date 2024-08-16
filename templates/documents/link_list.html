@@ -49,9 +49,39 @@
                     </small>
                 </p>
                 <p class="card-text">{{ link.description }}</p>
-                {% if user == link.user %}
-                    <a href="{% url 'delete_link' link.pk %}" class="btn btn-danger btn-sm">Delete</a>
-                {% endif %}
+                <div class="d-flex justify-content-start">
+                    {% if user == link.user %}
+                        <a href="{% url 'delete_link' link.pk %}" class="btn btn-danger btn-sm me-2">Delete</a>
+                    {% endif %}
+                    {% if user.is_authenticated and user != link.user %}
+                        <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#reportModal{{ link.pk }}">Report</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Modal -->
+        <div class="modal fade" id="reportModal{{ link.pk }}" tabindex="-1" aria-labelledby="reportModalLabel{{ link.pk }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="reportModalLabel{{ link.pk }}">Report Link</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{% url 'report_link' link.pk %}" method="post">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="reason{{ link.pk }}" class="form-label">Reason for reporting:</label>
+                                <textarea class="form-control" id="reason{{ link.pk }}" name="reason" rows="3" required></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Submit Report</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     {% empty %}
@@ -64,4 +94,14 @@
         {% include 'pagination.html' with page=page_obj %}
     </nav>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Ensure Bootstrap JS is loaded for modal functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        var myModalEl = document.querySelectorAll('.modal')
+        var modal = M.Modal.init(myModalEl);
+    });
+</script>
 {% endblock %}

@@ -1,3 +1,5 @@
 from django.contrib import admin
+from .models import EducationalLink, LinkReport
 
-# Register your models here.
+admin.site.register(EducationalLink)
+admin.site.register(LinkReport)

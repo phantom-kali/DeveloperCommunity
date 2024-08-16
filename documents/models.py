@@ -63,3 +63,13 @@ class EducationalLink(models.Model):
 
     def __str__(self):
         return self.title
+
+class LinkReport(models.Model):
+    link = models.ForeignKey(EducationalLink, on_delete=models.CASCADE, related_name='reports')
+    reported_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    reason = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Report for {self.link.title} by {self.reported_by.username}"
+
