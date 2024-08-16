@@ -6,7 +6,7 @@ from .models import Document, EducationalLink
 from .forms import DocumentForm, EducationalLinkForm
 from django.core.exceptions import ValidationError
 
-
+@login_required
 def document_list(request):
     documents = Document.objects.all().order_by("-created_at")
 
@@ -56,7 +56,7 @@ def upload_document(request):
         form = DocumentForm()
     return render(request, "documents/upload_document.html", {"form": form})
 
-
+@login_required
 def document_detail(request, pk):
     document = get_object_or_404(Document, pk=pk)
     return render(request, "documents/document_detail.html", {"document": document})
@@ -70,7 +70,7 @@ def delete_document(request, pk):
         return redirect("document_list")
     return render(request, "documents/delete_document.html", {"document": document})
 
-
+@login_required
 def link_list(request):
     links = EducationalLink.objects.all().order_by("-created_at")
 

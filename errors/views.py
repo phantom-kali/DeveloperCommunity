@@ -6,9 +6,11 @@ from .models import ErrorMessage, Solution
 from .forms import ErrorMessageForm, SolutionForm
 from fuzzywuzzy import fuzz
 
+@login_required
 def calculate_similarity(text1, text2):
     return fuzz.ratio(text1.lower(), text2.lower())
 
+@login_required
 def error_list(request):
     errors = ErrorMessage.objects.all().order_by('-created_at')
     
@@ -72,6 +74,7 @@ def create_error(request):
         form = ErrorMessageForm()
     return render(request, 'errors/create_error.html', {'form': form})
 
+@login_required
 def error_detail(request, pk):
     error = get_object_or_404(ErrorMessage, pk=pk)
     solutions = error.solutions.all().order_by('-created_at')

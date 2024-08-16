@@ -5,6 +5,7 @@ from .models import CodeSnippet, Comment
 from .forms import CodeSnippetForm, CommentForm
 from django.db.models import Q
 
+@login_required
 def snippet_list(request):
     snippets = CodeSnippet.objects.all().order_by('-created_at')
     
@@ -52,6 +53,7 @@ def create_snippet(request):
         form = CodeSnippetForm()
     return render(request, 'snippets/create_snippet.html', {'form': form})
 
+@login_required
 def snippet_detail(request, pk):
     snippet = get_object_or_404(CodeSnippet, pk=pk)
     comments = snippet.comments.all().order_by('-created_at')
