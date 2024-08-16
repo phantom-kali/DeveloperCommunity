@@ -1,6 +1,16 @@
 {% extends 'base.html' %}
 
+
+{% block extra_css %}
+<style>
+    .vote-btn.active { font-weight: bold; }
+    .vote-btn.active[data-vote="1"] { color: #28a745; }
+    .vote-btn.active[data-vote="-1"] { color: #dc3545; }
+</style>
+{% endblock %}
+
 {% block content %}
+
 <div class="container mt-4">
     <h1 class="mb-4">Educational Links</h1>
     
@@ -41,6 +51,15 @@
                 <h2 class="card-title h5">
                     <a href="{{ link.url }}" target="_blank" class="text-decoration-none">{{ link.title }}</a>
                 </h2>
+                <div class="vote-buttons">
+                    <button class="btn btn-sm btn-outline-success vote-btn" data-link-id="{{ link.id }}" data-vote="1" data-voted="{{ link.user_vote }}">
+                        <i class="bi bi-arrow-up-circle"></i> <span class="upvote-count">{{ link.upvotes }}</span>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger vote-btn" data-link-id="{{ link.id }}" data-vote="-1" data-voted="{{ link.user_vote }}">
+                        <i class="bi bi-arrow-down-circle"></i> <span class="downvote-count">{{ link.downvotes }}</span>
+                    </button>
+                    <span class="ms-2">Score: <span class="score">{{ link.score }}</span></span>
+                </div>
                 <p class="card-text">
                     <small class="text-muted">
                         Category: {{ link.category }} | 
@@ -102,6 +121,59 @@
     document.addEventListener('DOMContentLoaded', function() {
         var myModalEl = document.querySelectorAll('.modal')
         var modal = M.Modal.init(myModalEl);
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrfToken = getCookie('csrftoken');
+
+    document.querySelectorAll('.vote-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const linkId = this.dataset.linkId;
+            const vote = this.dataset.vote;
+            const card = this.closest('.card');
+
+            fetch(`/documents/vote/${linkId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: JSON.stringify({ vote: vote }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update vote counts and styles
+                    card.querySelector('.upvote-count').textContent = data.upvotes;
+                    card.querySelector('.downvote-count').textContent = data.downvotes;
+                    card.querySelector('.score').textContent = data.score;
+                    
+                    card.querySelectorAll('.vote-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    if (data.user_vote !== 0) {
+                        this.classList.add('active');
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    });
     });
 </script>
 {% endblock %}

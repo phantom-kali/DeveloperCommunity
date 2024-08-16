@@ -47,7 +47,7 @@ class Document(models.Model):
     category = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    
     def __str__(self):
         return self.title
 
@@ -61,6 +61,13 @@ class EducationalLink(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    upvotes = models.PositiveIntegerField(default=0)
+    downvotes = models.PositiveIntegerField(default=0)
+
+    @property
+    def score(self):
+        return self.upvotes - self.downvotes
+
     def __str__(self):
         return self.title
 
@@ -73,3 +80,10 @@ class LinkReport(models.Model):
     def __str__(self):
         return f"Report for {self.link.title} by {self.reported_by.username}"
 
+class Vote(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    link = models.ForeignKey(EducationalLink, on_delete=models.CASCADE)
+    vote = models.SmallIntegerField(choices=((1, 'Upvote'), (-1, 'Downvote')))
+
+    class Meta:
+        unique_together = ('user', 'link')

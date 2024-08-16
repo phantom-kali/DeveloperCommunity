@@ -1,16 +1,20 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 import requests
 from urllib.parse import urlparse
 from django.core.cache import cache
 from django.db.models import Q
 from django.core.paginator import Paginator
-from .models import Document, EducationalLink, LinkReport
+from .models import Document, EducationalLink, LinkReport, Vote
 from .forms import DocumentForm, EducationalLinkForm
+from django.db.models import Prefetch
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
+from django.http import JsonResponse
 from pathlib import Path
+import json
 import os
 from dotenv import load_dotenv
 
@@ -111,6 +115,16 @@ def link_list(request):
 
     categories = EducationalLink.objects.values_list("category", flat=True).distinct()
 
+    if request.user.is_authenticated:
+        links = links.prefetch_related(
+            Prefetch('vote_set', queryset=Vote.objects.filter(user=request.user), to_attr='user_votes')
+        )
+        for link in links:
+            link.user_vote = link.user_votes[0].vote if link.user_votes else 0
+    else:
+        for link in links:
+            link.user_vote = 0
+
     context = {
         "page_obj": page_obj,
         "categories": categories,
@@ -199,6 +213,56 @@ def add_link(request):
         form = EducationalLinkForm()
     return render(request, "documents/add_link.html", {"form": form})
 
+@login_required
+@require_POST
+def vote_link(request, pk):
+    link = get_object_or_404(EducationalLink, pk=pk)
+    data = json.loads(request.body)
+    vote_value = data.get('vote')
+
+    if vote_value not in ['1', '-1']:
+        return JsonResponse({'success': False, 'error': 'Invalid vote value'})
+
+    vote_value = int(vote_value)
+    vote, created = Vote.objects.get_or_create(user=request.user, link=link, defaults={'vote': vote_value})
+
+    if not created:
+        if vote.vote == vote_value:
+            # User is un-voting
+            if vote_value == 1:
+                link.upvotes -= 1
+            else:
+                link.downvotes -= 1
+            vote.delete()
+            user_vote = 0
+        else:
+            # User is changing their vote
+            if vote_value == 1:
+                link.upvotes += 1
+                link.downvotes -= 1
+            else:
+                link.upvotes -= 1
+                link.downvotes += 1
+            vote.vote = vote_value
+            vote.save()
+            user_vote = vote_value
+    else:
+        # New vote
+        if vote_value == 1:
+            link.upvotes += 1
+        else:
+            link.downvotes += 1
+        user_vote = vote_value
+
+    link.save()
+
+    return JsonResponse({
+        'success': True,
+        'upvotes': link.upvotes,
+        'downvotes': link.downvotes,
+        'score': link.score,
+        'user_vote': user_vote
+    })
 
 @login_required
 def delete_link(request, pk):
