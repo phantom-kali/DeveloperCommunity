@@ -1,10 +1,22 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+import requests
+from urllib.parse import urlparse
+from django.core.cache import cache
 from django.db.models import Q
 from django.core.paginator import Paginator
 from .models import Document, EducationalLink
 from .forms import DocumentForm, EducationalLinkForm
 from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
+from pathlib import Path
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+dotenv_path = Path(__file__).resolve().parent / ".env"
+load_dotenv(dotenv_path)
+
 
 @login_required
 def document_list(request):
@@ -56,6 +68,7 @@ def upload_document(request):
         form = DocumentForm()
     return render(request, "documents/upload_document.html", {"form": form})
 
+
 @login_required
 def document_detail(request, pk):
     document = get_object_or_404(Document, pk=pk)
@@ -69,6 +82,7 @@ def delete_document(request, pk):
         document.delete()
         return redirect("document_list")
     return render(request, "documents/delete_document.html", {"document": document})
+
 
 @login_required
 def link_list(request):
@@ -106,11 +120,75 @@ def link_list(request):
     return render(request, "documents/link_list.html", context)
 
 
+def is_url_safe(url):
+    # Parse the URL to get the domain
+    domain = urlparse(url).netloc
+
+    # Check whitelist first (faster and doesn't use API quota)
+    whitelist = [
+        "coursera.org",
+        "edx.org",
+        "udacity.com",
+        "khanacademy.org",
+        "mit.edu",
+        "stanford.edu",
+        "harvard.edu",
+        "youtube.com",
+    ]
+    if any(domain.endswith(white_domain) for white_domain in whitelist):
+        return True
+
+    # If not in whitelist, check cache
+    cache_key = f"url_safety_{domain}"
+    cached_result = cache.get(cache_key)
+    if cached_result is not None:
+        return cached_result
+
+    # If not in cache, use Google Safe Browsing API
+    api_key = os.getenv("API_KEY")
+    api_url = f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={api_key}"
+
+    payload = {
+        "client": {"clientId": "jooustconnect.co.ke", "clientVersion": "1.0.0"},
+        "threatInfo": {
+            "threatTypes": ["MALWARE", "SOCIAL_ENGINEERING"],
+            "platformTypes": ["ANY_PLATFORM"],
+            "threatEntryTypes": ["URL"],
+            "threatEntries": [{"url": url}],
+        },
+    }
+
+    response = requests.post(api_url, json=payload)
+    result = response.json()
+
+    is_safe = "matches" not in result
+
+    # Cache the result for future checks (cache for 1 day)
+    cache.set(cache_key, is_safe, 60 * 60 * 24)
+
+    return is_safe
+
+
 @login_required
 def add_link(request):
     if request.method == "POST":
         form = EducationalLinkForm(request.POST)
         if form.is_valid():
+            url = form.cleaned_data["url"]
+
+            try:
+                URLValidator()(url)
+            except ValidationError:
+                form.add_error("url", "Invalid URL format")
+                return render(request, "documents/add_link.html", {"form": form})
+
+            if not is_url_safe(url):
+                form.add_error(
+                    "url",
+                    "This URL may not be safe. If you believe this is a mistake, please contact the administrator.",
+                )
+                return render(request, "documents/add_link.html", {"form": form})
+
             link = form.save(commit=False)
             link.user = request.user
             link.save()
