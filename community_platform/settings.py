@@ -18,6 +18,7 @@ INSTALLED_APPS = [
     'snippets',
     'errors',
     'documents',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [

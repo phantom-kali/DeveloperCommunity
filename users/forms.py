@@ -9,7 +9,7 @@ class CustomUserCreationForm(UserCreationForm):
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'bio': forms.Textarea(attrs={'class': 'form-control'}),
+            'bio': forms.TextInput(attrs={'class': 'form-control'}),
             'profile_picture': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
 
@@ -20,6 +20,6 @@ class CustomUserChangeForm(UserChangeForm):
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'bio': forms.Textarea(attrs={'class': 'form-control'}),
+            'bio': forms.TextInput(attrs={'class': 'form-control'}),
             'profile_picture': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
