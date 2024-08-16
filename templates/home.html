@@ -1,47 +1,64 @@
 {% extends 'base.html' %}
 
+{% block title %}Developer Community - Share Code, Solve Errors, Learn Together{% endblock %}
+
+{% block meta %}
+<meta name="description" content="Join our Developer Community to share code snippets, discuss error messages, access educational resources, and learn together. Enhance your programming skills today!">
+<meta name="keywords" content="developer community, code snippets, error messages, programming resources, learn coding">
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
-    <h1 class="mb-4">Welcome to Developer Community</h1>
-    <p class="mb-4">Share code snippets, discuss errors, and learn together!</p>
+    <h1 class="mb-4">Developer Community: Collaborate, Code, and Learn</h1>
+    <p class="mb-4 lead">Welcome to our vibrant community where developers share code snippets, troubleshoot errors, and access valuable learning resources!</p>
 
     <div class="row">
-        <div class="col-md-4 mb-3">
-            <div class="card">
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Code Snippets</h5>
-                    <p class="card-text">Browse and share useful code snippets with the community.</p>
-                    <a href="{% url 'snippet_list' %}" class="btn btn-primary">View Snippets</a>
+                    <h2 class="card-title h5">Code Snippets</h2>
+                    <p class="card-text">Explore and contribute useful code snippets across various programming languages.</p>
+                    <a href="{% url 'snippet_list' %}" class="btn btn-primary">Browse Snippets</a>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <div class="card">
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Error Messages</h5>
-                    <p class="card-text">Discuss and resolve common error messages and issues.</p>
-                    <a href="{% url 'error_list' %}" class="btn btn-primary">View Errors</a>
+                    <h2 class="card-title h5">Error Solutions</h2>
+                    <p class="card-text">Find solutions to common error messages and debug issues efficiently.</p>
+                    <a href="{% url 'error_list' %}" class="btn btn-primary">Solve Errors</a>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <div class="card">
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Educational Documents</h5>
-                    <p class="card-text">Access and share educational PDFs and resources.</p>
-                    <a href="{% url 'document_list' %}" class="btn btn-primary">View Documents</a>
+                    <h2 class="card-title h5">Learning Resources</h2>
+                    <p class="card-text">Access a curated collection of educational PDFs and documents to enhance your skills.</p>
+                    <a href="{% url 'document_list' %}" class="btn btn-primary">View Resources</a>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <div class="card">
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Educational Links</h5>
-                    <p class="card-text">Discover and share useful links for learning and development.</p>
-                    <a href="{% url 'link_list' %}" class="btn btn-primary">View Links</a>
+                    <h2 class="card-title h5">Useful Links</h2>
+                    <p class="card-text">Discover hand-picked links to tutorials, tools, and development resources.</p>
+                    <a href="{% url 'link_list' %}" class="btn btn-primary">Explore Links</a>
                 </div>
             </div>
         </div>
     </div>
+
+    <section class="mt-5">
+        <h2 class="h3 mb-4">Why Join Our Developer Community?</h2>
+        <ul class="list-group">
+            <li class="list-group-item">Collaborate with developers worldwide</li>
+            <li class="list-group-item">Access a vast library of code snippets and solutions</li>
+            <li class="list-group-item">Stay updated with the latest programming trends and best practices</li>
+            <li class="list-group-item">Accelerate your learning with curated educational resources</li>
+        </ul>
+    </section>
 </div>
 {% endblock %}
