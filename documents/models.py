@@ -1,9 +1,11 @@
 from django.core.exceptions import ValidationError
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.conf import settings
 import magic
 import os
 from django.utils.crypto import get_random_string
+from core.models import VotableContent, ReportableContent
 
 
 def validate_file_type(file):
@@ -39,7 +41,7 @@ def get_unique_filename(instance, filename):
     return os.path.join("documents", filename)
 
 
-class Document(models.Model):
+class Document(VotableContent):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=200, unique=True)
     description = models.CharField(max_length=500)
@@ -48,11 +50,13 @@ class Document(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    votes = GenericRelation('core.Vote')
+    reports = GenericRelation('core.Report')
+
     def __str__(self):
         return self.title
 
-
-class EducationalLink(models.Model):
+class EducationalLink(VotableContent):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=200, unique=True)
     url = models.URLField(unique=True)
@@ -61,29 +65,9 @@ class EducationalLink(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    upvotes = models.PositiveIntegerField(default=0)
-    downvotes = models.PositiveIntegerField(default=0)
-
-    @property
-    def score(self):
-        return self.upvotes - self.downvotes
+    votes = GenericRelation('core.Vote')
+    reports = GenericRelation('core.Report')
 
     def __str__(self):
         return self.title
 
-class LinkReport(models.Model):
-    link = models.ForeignKey(EducationalLink, on_delete=models.CASCADE, related_name='reports')
-    reported_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    reason = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Report for {self.link.title} by {self.reported_by.username}"
-
-class Vote(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    link = models.ForeignKey(EducationalLink, on_delete=models.CASCADE)
-    vote = models.SmallIntegerField(choices=((1, 'Upvote'), (-1, 'Downvote')))
-
-    class Meta:
-        unique_together = ('user', 'link')
