@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<style>
+    .vote-btn.active {
+        font-weight: bold;
+    }
+
+    .vote-btn.active[data-vote="1"] {
+        color: #28a745;
+    }
+
+    .vote-btn.active[data-vote="-1"] {
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{{ page_title }}</h1>
+
+    <div class="row mb-4">
+        <div class="col">
+            {% if page_title == "Educational Documents" %}
+                <a href="{% url 'upload_document' %}" class="btn btn-primary">Upload New Document</a>
+            {% else %}
+                <a href="{% url 'add_link' %}" class="btn btn-primary">Add New Link</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <form method="get" action="{% if page_title == 'Educational Documents' %}{% url 'document_list' %}{% else %}{% url 'link_list' %}{% endif %}" class="mb-4">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label for="category" class="form-label">Filter by Category:</label>
+                <select name="category" id="category" class="form-select">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}" {% if cat == current_category %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="user" class="form-label">Filter by User:</label>
+                <input type="text" name="user" id="user" value="{{ current_user }}" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <label for="q" class="form-label">Search:</label>
+                <input type="text" name="q" id="q" value="{{ query }}" class="form-control">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-secondary w-100">Apply Filters</button>
+            </div>
+        </div>
+    </form>
+
+    {% for item in page_obj %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="card-title h5">
+                {% if page_title == "Educational Documents" %}
+                    <a href="{% url 'document_detail' item.pk %}" class="text-decoration-none">{{ item.title }}</a>
+                {% else %}
+                    <a href="{{ item.url }}" target="_blank" class="text-decoration-none">{{ item.title }}</a>
+                {% endif %}
+            </h2>
+            <div class="vote-buttons">
+                <button class="btn btn-sm btn-outline-success vote-btn"
+                    data-content-type-id="{{ content_type.id }}" data-object-id="{{ item.id }}"
+                    data-vote="1" data-voted="{{ item.user_vote }}">
+                    <i class="bi bi-arrow-up-circle"></i> <span class="upvote-count">{{ item.upvotes }}</span>
+                </button>
+                <button class="btn btn-sm btn-outline-danger vote-btn"
+                    data-content-type-id="{{ content_type.id }}" data-object-id="{{ item.id }}"
+                    data-vote="-1" data-voted="{{ item.user_vote }}">
+                    <i class="bi bi-arrow-down-circle"></i> <span class="downvote-count">{{ item.downvotes }}</span>
+                </button>
+                <span class="ms-2">Score: <span class="score">{{ item.score }}</span></span>
+            </div>
+            <p class="card-text">
+                <small class="text-muted">
+                    Category: {{ item.category }} |
+                    {% if item.user %}Added by: {{ item.user.username }} |{% endif %}
+                    {% if item.created_at %}Added at: {{ item.created_at|date:"F d, Y" }}{% endif %}
+                </small>
+            </p>
+            <p class="card-text">{{ item.description }}</p>
+            <div class="d-flex justify-content-start">
+                {% if user == item.user %}
+                    {% if page_title == "Educational Documents" %}
+                        <a href="{% url 'delete_document' item.pk %}" class="btn btn-danger btn-sm me-2">Delete</a>
+                    {% else %}
+                        <a href="{% url 'delete_link' item.pk %}" class="btn btn-danger btn-sm me-2">Delete</a>
+                    {% endif %}
+                {% endif %}
+                {% if user.is_authenticated and user != item.user %}
+                <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                    data-bs-target="#reportModal{{ item.id }}">Report</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Modal -->
+    <div class="modal fade" id="reportModal{{ item.id }}" tabindex="-1"
+        aria-labelledby="reportModalLabel{{ item.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reportModalLabel{{ item.id }}">Report {{ page_title|slice:"11:-1" }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{% url 'core:report' content_type.id item.id %}" method="post" class="report-form">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="reason{{ item.id }}" class="form-label">Reason for reporting:</label>
+                            <textarea class="form-control" id="reason{{ item.id }}" name="reason" rows="3"
+                                required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Submit Report</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="alert alert-info" role="alert">
+        {% if page_title == "Educational Documents" %}
+            No documents uploaded yet.
+        {% else %}
+            No educational links added yet.
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <nav aria-label="Page navigation">
+        {% include 'pagination.html' with page=page_obj %}
+    </nav>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const csrfToken = getCookie('csrftoken');
+
+        document.querySelectorAll('.vote-btn').forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
+                const contentTypeId = this.dataset.contentTypeId;
+                const objectId = this.dataset.objectId;
+                const vote = this.dataset.vote;
+                const card = this.closest('.card');
+
+                fetch(`/core/vote/${contentTypeId}/${objectId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: JSON.stringify({ vote: vote }),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Update vote counts and styles
+                            card.querySelector('.upvote-count').textContent = data.upvotes;
+                            card.querySelector('.downvote-count').textContent = data.downvotes;
+                            card.querySelector('.score').textContent = data.score;
+
+                            card.querySelectorAll('.vote-btn').forEach(btn => {
+                                btn.classList.remove('active');
+                            });
+                            if (data.user_vote !== 0) {
+                                this.classList.add('active');
+                            }
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
+        });
+
+        document.querySelectorAll('.report-form').forEach(form => {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+
+                fetch(this.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: formData,
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                            // Close the modal
+                            const modal = this.closest('.modal');
+                            const modalInstance = bootstrap.Modal.getInstance(modal);
+                            modalInstance.hide();
+                        } else {
+                            alert(data.error);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
+        });
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}
