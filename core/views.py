@@ -3,13 +3,15 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.contrib.contenttypes.models import ContentType
 from .models import Vote, Report
+import json
 
 @login_required
 def vote(request, content_type_id, object_id):
     content_type = get_object_or_404(ContentType, id=content_type_id)
     obj = get_object_or_404(content_type.model_class(), id=object_id)
     
-    vote_value = request.POST.get('vote')
+    data = json.loads(request.body)
+    vote_value = data.get('vote')
     if vote_value not in ['1', '-1']:
         return JsonResponse({'success': False, 'error': 'Invalid vote value'})
 
@@ -24,31 +26,19 @@ def vote(request, content_type_id, object_id):
     if not created:
         if vote.vote == vote_value:
             # User is un-voting
-            if vote_value == 1:
-                obj.upvotes -= 1
-            else:
-                obj.downvotes -= 1
             vote.delete()
-            user_vote = 0
+            vote_value = 0
         else:
             # User is changing their vote
-            if vote_value == 1:
-                obj.upvotes += 1
-                obj.downvotes -= 1
-            else:
-                obj.upvotes -= 1
-                obj.downvotes += 1
             vote.vote = vote_value
             vote.save()
-            user_vote = vote_value
-    else:
-        # New vote
-        if vote_value == 1:
-            obj.upvotes += 1
-        else:
-            obj.downvotes += 1
-        user_vote = vote_value
-
+    
+    # Recalculate vote counts
+    upvotes = Vote.objects.filter(content_type=content_type, object_id=object_id, vote=1).count()
+    downvotes = Vote.objects.filter(content_type=content_type, object_id=object_id, vote=-1).count()
+    
+    obj.upvotes = upvotes
+    obj.downvotes = downvotes
     obj.save()
 
     return JsonResponse({
@@ -56,7 +46,7 @@ def vote(request, content_type_id, object_id):
         'upvotes': obj.upvotes,
         'downvotes': obj.downvotes,
         'score': obj.score,
-        'user_vote': user_vote
+        'user_vote': vote_value
     })
 
 @login_required
