@@ -5,3 +5,7 @@ python-Levenshtein
 django-widget-tweaks
 python-magic
 python-dotenv
+pathlib
+requests
+urllib3==1.26.12
+pillow
