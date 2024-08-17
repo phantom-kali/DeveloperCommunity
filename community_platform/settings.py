@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     'errors',
     'documents',
     'widget_tweaks',
+    'core'
 ]
 
 MIDDLEWARE = [
